@@ -39,7 +39,7 @@ Voce opera o Saves Engine. Leia o argumento do comando e execute a acao correspo
 
 **Argumento recebido:** $ARGUMENTS
 
-Se nenhum argumento vier, pergunte qual das seis acoes ela quer.
+Se nenhum argumento vier, pergunte qual das sete acoes ela quer.
 
 ## Constantes do projeto
 

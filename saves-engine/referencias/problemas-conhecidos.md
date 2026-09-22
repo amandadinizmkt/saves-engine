@@ -78,7 +78,7 @@ que o Notion confirmou a escrita daquela linha. Custa nada e resolve de vez.
 Esta não está no tutorial original: apareceu em produção, no sistema da Amanda, em
 setembro de 2026.
 
-**Sintoma:** o `sync.log` termina em `Reordenando as linhas ja existentes (+N)` e nunca
+**Sintoma:** o `sync.log` para antes de `Reordenadas N linhas do topo (+N)` e nunca
 chega ao `Sync completo`. Os salvos novos não entram no Notion. O `state.json` fica
 com `last_sync: None`.
 
@@ -266,18 +266,20 @@ cada linha pelo `Media ID`.
 ## Rodadas interrompidas deixando a `Ordem` bagunçada
 
 **Sintoma:** números de `Ordem` repetidos, com buracos, ou muito maiores que o total de
-linhas. No log, várias sequências de `Pagina 1: 50 salvos` recomeçando do zero, cada uma
-precedida de `Lock orfao de uma rodada que morreu. Assumindo.`
+linhas. No log, várias sequências de `Pagina 1: 50 salvos` recomeçando do zero.
 
-**Causa:** cada Ctrl+C mata o processo sem soltar o lock. A rodada seguinte vê o lock
-órfão, assume — e recomeça a varredura **do começo**, chamando o reordenamento de novo.
-Três interrupções viram três deslocamentos em cima dos mesmos dados.
+**Causa:** cada Ctrl+C mata o processo no meio da escrita. O lock do sistema se solta
+junto (é assim que o `flock` funciona), então a rodada seguinte entra normalmente — e
+recomeça a varredura **do começo**, chamando o reordenamento de novo, sobre linhas que
+já tinham sido deslocadas. Três interrupções viram três deslocamentos nos mesmos dados.
 
-**Isso não é bug do lock:** assumir lock órfão é o comportamento certo, senão um
-processo morto travaria o sistema para sempre. O que falta é não insistir.
+**Como evitar:** depois de interromper, **não rode de novo na sequência.** Veja quantas
+linhas entraram no Notion e o que o `state.json` registrou, e só então decida.
 
-**Como evitar:** depois de uma interrupção, **não rode de novo na sequência.** Apague o
-`.sync.lock`, veja quantas linhas entraram no Notion, e só então decida.
+**Cuidado com o state defasado:** se a rodada morreu entre dois pontos de gravação (o
+state grava a cada 25), o `state.json` conhece menos linhas do que existem no Notion.
+A rodada seguinte vai tentar reescrever essa diferença. Compare os dois números antes
+de rodar de novo.
 
 **Como consertar:** busque a ordem real no Instagram (`feed/saved/posts/`, o primeiro é
 o 1) e reescreva a `Ordem` de cada linha casando pelo `Media ID`. Depois confira: sem

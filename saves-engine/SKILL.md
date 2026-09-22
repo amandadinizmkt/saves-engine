@@ -210,7 +210,16 @@ transcrição e se vai transcrever o acervo. Peça o ok. Só então construa.
 
 ## Etapa 2 — A construção
 
-Pergunte onde criar a pasta (padrão: `~/saves-engine`) e gere, nesta ordem:
+Pergunte onde criar a pasta. **O padrão é `~/meu-saves-engine`, e o nome é
+diferente de propósito:** o repositório que ela clonou para instalar a skill
+costuma estar em `~/saves-engine`. Criar o projeto lá dentro mistura os
+segredos dela (o `config.json`) com um clone do GitHub de outra pessoa.
+
+Se ela tiver duas contas do Instagram, use o @ no nome: `~/saves-engine-<conta>`.
+Duas instâncias na mesma máquina precisam de pasta, lock e **nome de agendador**
+diferentes — dois agendadores com o mesmo nome, um sobrescreve o outro.
+
+Gere, nesta ordem:
 
 **1. A estrutura**
 ```
@@ -235,7 +244,40 @@ pergunta 1 e a 8 definiram. Gere o arquivo **completo**, nunca um patch.
 **4. O `config.json`** com os valores dela, e o `config.example.json` com
 `COLE_AQUI_O_...` no lugar de cada segredo. **O `.gitignore` sai junto, na mesma hora.**
 
+Os campos são exatamente estes, e os nomes importam porque o código lê por eles:
+
+```json
+{
+  "ig_session_id": "COLE_AQUI_O_SESSIONID",
+  "ig_csrftoken": "COLE_AQUI_O_CSRFTOKEN",
+  "ig_user_id": "COLE_AQUI_O_DS_USER_ID",
+  "notion_token": "COLE_AQUI_O_TOKEN_DA_INTEGRACAO",
+  "notion_database_id": "id_da_base_Instagram_Saves",
+  "notion_database_ideas_id": "id_da_base_Content_Ideas"
+}
+```
+
+Se a transcrição for pela API (pergunta 8), acrescente `"openai_api_key"`.
+
+**`notion_database_id` é o nome que o `sync.py` procura** — não invente
+`base_saves` nem outro apelido, ou o script sai com "Faltam valores no config.json".
+O `notion_database_ideas_id` não é lido pelo Python: quem usa é o comando de
+ideação, pelo conector.
+
 **5. A venv e as dependências**
+
+**O `requirements.txt` sai assim, com a versão do notion-client travada:**
+
+```
+requests>=2.31
+notion-client>=2.2,<3.0
+```
+
+O `<3.0` não é capricho: a versão 3 mudou a API e quebra o `sync.py`. É a Pedra 1
+de `problemas-conhecidos.md`, e sem o pin ela volta sozinha na próxima instalação.
+
+Se a pessoa escolheu a transcrição paga (pergunta 8), acrescente `openai>=1.0`.
+Se escolheu o faster-whisper (Windows grátis), acrescente `faster-whisper>=1.0`.
 
 Mac:
 ```bash
@@ -248,6 +290,15 @@ Windows:
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 ```
+
+**⚠️ Biblioteca que o código IMPORTA vai no requirements, dentro da venv.**
+
+`faster_whisper` e `openai` são importados pelo `transcribe.py`. Se forem instalados
+com `pip install` global, o Python da venv **não os enxerga** — e o script reclama
+pedindo exatamente o comando que a pessoa acabou de rodar. Um beco sem saída.
+
+Já `yt-dlp`, `ffmpeg` e `mlx_whisper` são chamados como **programa** (subprocess),
+não importados. Esses podem ser globais, e é assim que a etapa 5 instala.
 
 **6. O comando de ideação** em `.claude/commands/saves-engine.md`, do template de
 `referencias/comando-de-ideacao.md`, **com o público e os pilares dela preenchidos.**
@@ -306,11 +357,12 @@ cada. Com o limite padrão de 30, são menos de dois minutos. Sem limite, uma co
 mil salvos passa de dez minutos. Com o state incremental, mesmo que interrompa, o
 trabalho não se perde.
 
-**Se a pessoa interromper no meio, não rode de novo na sequência.** O `sync.py` vai ver
-o lock de um processo que morreu, assumir, e começar a varredura do zero. Duas ou três
-interrupções seguidas viram várias rodadas parciais, e a coluna `Ordem` sai deslocada
-em cada uma. Se acontecer: apague o `.sync.lock`, confira quantas linhas entraram no
-Notion e só então decida o próximo passo.
+**Se a pessoa interromper no meio, não rode de novo na sequência.** O lock se solta
+sozinho quando o processo morre, então a rodada seguinte entra — e recomeça a varredura
+do zero, reordenando de novo linhas que já tinham sido deslocadas. Duas ou três
+interrupções viram várias rodadas parciais, e a coluna `Ordem` sai deslocada em cada
+uma. Se acontecer: confira quantas linhas entraram no Notion e quantas o `state.json`
+conhece (ele grava a cada 25, então pode estar defasado) e só então decida.
 
 Peça pra ela abrir o Notion e ver as linhas. **Esse é o momento que faz o sistema
 virar real pra ela.** Não passe correndo.

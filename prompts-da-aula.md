@@ -8,12 +8,12 @@ Todos os comandos e prompts que apareceram na tela, na ordem em que apareceram.
 
 **Mac:**
 ```bash
-cp -r skills/saves-engine ~/.claude/skills/
+mkdir -p ~/.claude/skills && cp -r saves-engine ~/.claude/skills/
 ```
 
 **Windows:**
 ```
-xcopy /E /I skills\saves-engine %USERPROFILE%\.claude\skills\saves-engine
+xcopy /E /I saves-engine %USERPROFILE%\.claude\skills\saves-engine
 ```
 
 Conferir:

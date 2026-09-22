@@ -42,8 +42,12 @@ cd saves-engine
 
 ### 2. Copie a skill para o Claude Code
 
+Rode de dentro da pasta que você acabou de clonar (o `cd` do passo 1 já te
+colocou lá).
+
 **Mac / Linux:**
 ```bash
+mkdir -p ~/.claude/skills
 cp -r saves-engine ~/.claude/skills/
 ```
 
@@ -51,6 +55,9 @@ cp -r saves-engine ~/.claude/skills/
 ```
 xcopy /E /I saves-engine %USERPROFILE%\.claude\skills\saves-engine
 ```
+
+> Se der `No such file or directory`, você está fora da pasta. Rode
+> `cd ~/saves-engine` (ou onde você clonou) e tente de novo.
 
 ### 3. Confira que deu certo
 
@@ -78,7 +85,7 @@ A skill conduz o resto.
 |---|---|
 | **Claude Code** | É quem escreve o código e faz a ideação |
 | **Conta no Notion** | A gratuita resolve |
-| **Duas bases no Notion** | As colunas estão em [`estrutura-das-bases.md`](estrutura-das-bases.md) |
+| **Duas bases no Notion** | **A skill cria pra você** se o conector do Notion estiver ligado. Se preferir criar à mão, as colunas estão em [`estrutura-das-bases.md`](estrutura-das-bases.md) |
 | **Uma integração do Notion** | Criada em dois minutos, gera um token |
 | **Instagram com posts salvos** | Pode ser uma conta secundária |
 | **Python 3** | Já vem no Mac. No Windows, baixe em python.org e marque "Add Python to PATH" |
@@ -165,6 +172,7 @@ saves-engine/
 ├── SKILL.md                          o cérebro: entrevista, regras e a ordem de construção
 └── referencias/
     ├── bases-do-notion.md            as colunas das duas bases e as 4 visões
+    ├── criar-bases-automatico.md      cria as bases pelo conector do Notion
     ├── sync-py.md                    o robô que busca, com as 4 proteções
     ├── transcricao.md                o robô que escuta (Mac, Windows e API)
     ├── agendador.md                  launchd e Agendador de Tarefas
@@ -183,8 +191,9 @@ partir das respostas escreve o sistema inteiro:
 | 2 | Pra quem você cria conteúdo? | Entra no comando de ideação |
 | 3 | Quais são os seus pilares? | Viram o campo Pillar no Notion |
 | 4 | Qual pilar fala de ferramenta e IA? | Separa os assuntos |
-| 5 | Token do Notion e os dois ids | Vão pro arquivo de configuração |
-| 6 | Transcrever os antigos ou só os novos? | Padrão: só os novos |
+| 5 | As bases do Notion já existem? | Se não, a skill cria pelo conector |
+| 6a | Quantos salvos trazer na primeira rodada? | Padrão: os 30 mais recentes |
+| 6b | Transcrever os antigos ou só os novos? | Padrão: só os novos |
 | 7 | Que horas rodar? | Padrão: 9h e 21h |
 | 8 | No Windows: grátis e lento, ou pago e rápido? | Define a transcrição |
 

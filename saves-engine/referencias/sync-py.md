@@ -408,15 +408,30 @@ def acquire_lock():
     Duas rodadas em paralelo brigam pelo state.json e acabam criando paginas
     duplicadas. O lock e liberado sozinho quando o processo termina, entao um
     arquivo sobrando de uma rodada anterior nao trava nada.
+
+    Mac e Linux usam fcntl; Windows usa msvcrt. Os dois modulos vem com o
+    Python, mas cada um so existe no seu sistema: importar fcntl no Windows
+    e ModuleNotFoundError na primeira linha do main(), antes de ler o config.
+    Por isso o import e condicional.
     """
-    import fcntl
     lock_path = os.path.join(BASE_DIR, ".sync.lock")
     fh = open(lock_path, "w")
-    try:
-        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        log.error("Ja existe um sync rodando. Saindo para nao duplicar paginas.")
-        sys.exit(1)
+
+    if os.name == "nt":                      # Windows
+        import msvcrt
+        try:
+            msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            log.error("Ja existe um sync rodando. Saindo para nao duplicar paginas.")
+            sys.exit(1)
+    else:                                    # Mac e Linux
+        import fcntl
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            log.error("Ja existe um sync rodando. Saindo para nao duplicar paginas.")
+            sys.exit(1)
+
     fh.write(str(os.getpid()))
     fh.flush()
     return fh
