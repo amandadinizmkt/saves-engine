@@ -89,6 +89,50 @@ te dizer que leva cinco minutos, porque não leva.
 
 ---
 
+## Como usar no dia a dia
+
+Depois de montado, o sistema captura sozinho nos horários que você escolheu. Quando
+quiser produzir conteúdo, abra o Claude Code **na pasta do projeto** e rode:
+
+```
+/saves-engine ideate
+```
+
+Ele lê os salvos novos, entende do que cada um trata (pela transcrição, não pela
+legenda) e devolve, pra cada um: um ângulo adaptado pro seu público, três opções de
+gancho, um roteiro estruturado e o desdobramento por plataforma. Você aprova o que
+faz sentido, e só o aprovado vai pro calendário.
+
+### Todos os comandos
+
+| Comando | O que faz |
+|---|---|
+| `/saves-engine` | Constrói o sistema (a entrevista de 8 perguntas) |
+| `/saves-engine ideate` | Transforma os salvos novos em ideias de conteúdo |
+| `/saves-engine sync` | Roda a captura agora, sem esperar o horário |
+| `/saves-engine transcribe` | Transcreve os vídeos pendentes |
+| `/saves-engine status` | Mostra se está funcionando e quando foi o último sync |
+| `/saves-engine scheduler` | Confere se o agendador está carregado |
+| `/saves-engine refresh session` | Renova os cookies quando a sessão expira |
+| `/saves-engine recent` | Mostra os 15 salvos mais recentes |
+
+### O que você vai ter na pasta
+
+```
+saves-engine/
+├── sync.py              o robô que busca os salvos
+├── transcribe.py        o robô que escuta os reels
+├── config.json          os seus acessos (nunca compartilhe)
+├── .gitignore           protege o config.json
+├── LEIA-ME.md           o que fazer quando parar de funcionar
+└── .claude/commands/
+    └── saves-engine.md  o cérebro que transforma salvo em ideia
+```
+
+Mais o agendador instalado, rodando duas vezes por dia sozinho.
+
+---
+
 ## O que tem dentro da skill
 
 ```
@@ -263,6 +307,20 @@ Se for outra coisa, rode este prompt dentro da pasta do projeto:
 
 > O meu Saves Engine parou. Leia o sync.log e o state.json da pasta, me diga em
 > linguagem simples o que aconteceu e o que eu preciso fazer.
+
+Os sintomas mais comuns, com a causa e a saída de cada um, estão em
+[`saves-engine/referencias/problemas-conhecidos.md`](saves-engine/referencias/problemas-conhecidos.md).
+
+### Se você é aluna do Clube
+
+Traga a dúvida no **plantão ao vivo**, com as últimas 20 linhas do `sync.log`:
+
+```bash
+tail -20 sync.log
+```
+
+**Não leve o `config.json`**: ele tem os seus acessos. O `sync.log` não tem segredo
+nenhum e é o que mostra o que aconteceu.
 
 ---
 
