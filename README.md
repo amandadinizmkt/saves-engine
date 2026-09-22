@@ -131,6 +131,31 @@ saves-engine/
 
 Mais o agendador instalado, rodando duas vezes por dia sozinho.
 
+### A primeira rodada traz só os 30 mais recentes
+
+Não dá pra saber quantos salvos você tem sem buscar, e uma conta antiga passa
+facilmente de mil. Se a primeira rodada trouxesse tudo, você esperaria uns dez minutos
+e o Notion encheria de coisa salva há três anos.
+
+Por isso ela começa com **os 30 mais recentes**: em menos de dois minutos você vê o
+sistema funcionando de verdade. Daí pra frente, todo salvo novo entra automaticamente.
+
+Quer mais? É um número no topo do `sync.py`:
+
+```python
+LIMITE_PRIMEIRA_RODADA = 30    # 0 traz o acervo inteiro
+```
+
+Ele vale só enquanto a base está vazia. Depois disso o sync busca tudo — a deduplicação
+pelo `Media ID` garante que nada entre duas vezes.
+
+> **Por que esse número fica no código, e não no `config.json`?** Porque o `config.json`
+> é o arquivo que você abre num editor de texto para colar os cookies. Um salvamento
+> pode gravar uma versão antiga e apagar a linha do limite sem você perceber — e aí a
+> rodada seguinte traz o acervo inteiro. Aconteceu de verdade: pediram 20, vieram 2.006.
+> O que muda por pessoa (cookies, token, ids das bases) fica no config; o que decide
+> comportamento fica no código.
+
 ---
 
 ## O que tem dentro da skill

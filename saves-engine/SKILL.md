@@ -123,10 +123,34 @@ Diga em voz alta: **conectar só numa base é o erro mais comum do sistema intei
 
 → `notion_token`, `base_saves`, `base_ideas`
 
-**Pergunta 6: Você quer transcrever os salvos que já estão lá, ou só o que entrar daqui
-pra frente?**
+**Pergunta 6: Quantos salvos você quer trazer na primeira rodada?**
 
-**O padrão é "só o que entrar daqui pra frente", e explique o porquê:**
+São **duas decisões diferentes**, e elas se confundem com facilidade: quantos salvos
+**capturar** para o Notion, e quantos desses **transcrever**. Pergunte as duas.
+
+**6a. Quantos capturar.** O padrão é **os 30 mais recentes**, e explique o porquê:
+
+> "Não dá pra saber quantos salvos você tem sem buscar. Uma conta antiga passa
+> facilmente de mil, e aí a primeira rodada escreve mil linhas no Notion, demora uma
+> hora e enche a base de coisa que você salvou há três anos. Começar com os 30 mais
+> recentes te deixa ver o sistema funcionando em dois minutos. Depois você decide se
+> quer o acervo inteiro: é trocar um número."
+
+Ofereça três caminhos:
+
+| escolha | quando faz sentido |
+|---|---|
+| **os 30 mais recentes** (padrão) | quase sempre, e principalmente na primeira vez |
+| um número que ela escolher | ela sabe mais ou menos o tamanho do acervo dela |
+| todos | ela quer o acervo completo e aceita a espera |
+
+→ vira a constante `LIMITE_PRIMEIRA_RODADA` no topo do `sync.py` (número; `0` = todos)
+
+**Se ela escolher "todos", mostre a conta antes de aceitar:** cada linha no Notion leva
+cerca de meio segundo. Mil salvos são uns oito minutos só de escrita, mais o tempo de
+varrer as páginas do Instagram. Não é proibido; é só pra ela saber onde está entrando.
+
+**6b. Quantos transcrever.** O padrão é **só o que entrar daqui pra frente**:
 
 > "A Amanda tinha 488 vídeos salvos antes de montar o sistema, e marcou todos como
 > 'não transcrever'. O raciocínio: ela não ia ler 488 transcrições de posts que salvou
@@ -136,6 +160,29 @@ pra frente?**
 Se ela insistir em transcrever o acervo, aceite, mas **mostre a conta primeiro**: o
 número de vídeos dela × 8 segundos no Mac com chip M, ou × 30 segundos no Windows.
 → `transcrever_antigos` (sim/não)
+
+### ⚠️ Onde o limite MORA, e por que isso importa
+
+**O limite vai dentro do `sync.py`, como constante no topo do arquivo. Nunca no
+`config.json`.**
+
+O motivo é uma pedra real, de 22/09/2026: o limite estava no `config.json`. A pessoa
+abriu o arquivo num editor de texto para colar os cookies e salvou — e o editor gravou
+a versão que tinha carregado **antes** da linha do limite existir. O campo sumiu sem
+ninguém perceber, o `sync.py` entendeu "sem limite", e vieram 2.006 salvos em vez de 20.
+
+O `config.json` é editado à mão, várias vezes, por alguém que está aprendendo. Tudo que
+for **decisão de comportamento** fica no código, onde um Cmd+S não alcança. O
+`config.json` guarda só o que **muda por pessoa**: cookies, token, ids das bases.
+
+E, ao gerar o `sync.py`, **confira que a constante está lá antes de rodar pela primeira
+vez.** Uma linha de log resolve:
+
+```
+Primeira rodada: pegando so os 30 salvos mais recentes.
+```
+
+Se essa linha não aparecer, pare: o limite não está sendo lido.
 
 **Pergunta 7: Que horas você quer que ele rode?**
 Padrão: 9h e 21h. Explique o porquê: "duas vezes por dia, não de hora em hora. Volume
@@ -245,13 +292,25 @@ primeiro. Muda um número no `config.json` e nada mais.
 
 **O que esperar:**
 - `Sessao do Instagram valida para @...` — os cookies funcionaram
+- `Primeira rodada: pegando so os N salvos mais recentes.` — **o limite está valendo**
 - `Nao consegui listar colecoes (HTTP 404)` — **esperado, pode ignorar** (pedra 2)
 - `Pagina 1: 50 salvos (total 50)`, e assim por diante
 - `Sync completo: N novos | 0 ja existiam | N total | 0 erros`
 
-**Avise antes:** com centenas de salvos, a primeira rodada leva 10 minutos ou mais. É
-uma página do Notion por vez. Com o state incremental, mesmo que interrompa, o
+**A segunda linha é a que você confere.** Se ela não aparecer, o limite não está sendo
+lido, e a rodada vai trazer o acervo inteiro. Interrompa com Ctrl+C e confira a
+constante `LIMITE_PRIMEIRA_RODADA` no topo do `sync.py`.
+
+**Avise antes:** cada salvo vira uma página do Notion, uma de cada vez, a meio segundo
+cada. Com o limite padrão de 30, são menos de dois minutos. Sem limite, uma conta com
+mil salvos passa de dez minutos. Com o state incremental, mesmo que interrompa, o
 trabalho não se perde.
+
+**Se a pessoa interromper no meio, não rode de novo na sequência.** O `sync.py` vai ver
+o lock de um processo que morreu, assumir, e começar a varredura do zero. Duas ou três
+interrupções seguidas viram várias rodadas parciais, e a coluna `Ordem` sai deslocada
+em cada uma. Se acontecer: apague o `.sync.lock`, confira quantas linhas entraram no
+Notion e só então decida o próximo passo.
 
 Peça pra ela abrir o Notion e ver as linhas. **Esse é o momento que faz o sistema
 virar real pra ela.** Não passe correndo.
