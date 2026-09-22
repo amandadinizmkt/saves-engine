@@ -235,13 +235,85 @@ arredondados estão perdidos, mas o `state.json` continua servindo de deduplica�
 
 ---
 
+## Vieram salvos demais na primeira rodada
+
+**Sintoma:** a pessoa pediu 20 ou 30, e o Notion encheu de centenas ou milhares de
+linhas. No log, a linha `Primeira rodada: pegando so os N salvos mais recentes.`
+**não aparece**.
+
+**Causa quase certa: o limite estava no `config.json` e sumiu.** A pessoa abriu o
+arquivo num editor de texto para colar os cookies, e o editor salvou a versão que
+tinha carregado — de antes de o campo existir. O `sync.py` leu "sem limite" e
+trouxe o acervo inteiro.
+
+Aconteceu em 22/09/2026: pediram 20, vieram 2.006.
+
+**Conserto, e ele é de arquitetura, não de valor:** o limite vira constante no topo do
+`sync.py` (`LIMITE_PRIMEIRA_RODADA = 30`), e sai do `config.json` de vez. O config é
+editado à mão por alguém aprendendo; decisão de comportamento não pode morar lá.
+
+**Para arrumar o que já entrou**, decida com a pessoa antes de apagar nada:
+manter tudo, manter só as N primeiras, ou apagar e recomeçar. São salvos legítimos
+dela — não é lixo, é só mais do que ela pediu.
+
+Se ela quiser manter uma parte, **conserte a coluna `Ordem` primeiro**: rodadas
+interrompidas deslocam a numeração, e "as 20 primeiras pela Ordem" pode não ser as 20
+mais recentes de verdade. Busque a lista real do Instagram e reescreva a `Ordem` de
+cada linha pelo `Media ID`.
+
+---
+
+## Rodadas interrompidas deixando a `Ordem` bagunçada
+
+**Sintoma:** números de `Ordem` repetidos, com buracos, ou muito maiores que o total de
+linhas. No log, várias sequências de `Pagina 1: 50 salvos` recomeçando do zero, cada uma
+precedida de `Lock orfao de uma rodada que morreu. Assumindo.`
+
+**Causa:** cada Ctrl+C mata o processo sem soltar o lock. A rodada seguinte vê o lock
+órfão, assume — e recomeça a varredura **do começo**, chamando o reordenamento de novo.
+Três interrupções viram três deslocamentos em cima dos mesmos dados.
+
+**Isso não é bug do lock:** assumir lock órfão é o comportamento certo, senão um
+processo morto travaria o sistema para sempre. O que falta é não insistir.
+
+**Como evitar:** depois de uma interrupção, **não rode de novo na sequência.** Apague o
+`.sync.lock`, veja quantas linhas entraram no Notion, e só então decida.
+
+**Como consertar:** busque a ordem real no Instagram (`feed/saved/posts/`, o primeiro é
+o 1) e reescreva a `Ordem` de cada linha casando pelo `Media ID`. Depois confira: sem
+duplicatas, e a faixa indo de 1 até o total de linhas.
+
+---
+
+## As transcrições voltam "Música", "Tchau" ou créditos inventados
+
+**Sintoma:** o `transcribe.py` diz `N transcritos | 0 falharam`, mas o texto no Notion é
+`Música`, `Tchau.`, `A B B A A A...`, ou algo como `Transcrição e Legendas <um nome>`.
+
+**Isso não é erro.** O whisper transcreveu o que existia, e o que existia era música de
+fundo. O texto de créditos é alucinação conhecida do modelo em áudio instrumental: ele
+viu milhares de vídeos terminando assim durante o treino.
+
+**O que isso revela é sobre o conteúdo, não sobre o sistema.** Se a maioria dos salvos
+da pessoa é inspiração visual — decoração, moda, casamento, design —, a informação está
+na imagem, e a transcrição rende pouco. Se são pessoas falando de negócio, ensinando ou
+explicando, a transcrição é a parte mais valiosa do sistema.
+
+**O que fazer:** diga isso a ela com franqueza, e ajuste. Numa conta visual, vale marcar
+mais coisa como `Nao transcrever` e apoiar a ideação na legenda e no perfil do autor.
+Não force a transcrição onde ela não tem o que capturar.
+
+---
+
 ## O que NÃO é problema
 
 **`Nao consegui listar colecoes (HTTP 404)`** aparece toda rodada e é esperado
 (pedra 2). Pode ignorar.
 
-**O primeiro sync demorar 10 minutos.** Com centenas de salvos, é uma página do Notion
-por vez. Normal. Com o state incremental, mesmo que interrompa, o trabalho não se perde.
+**O primeiro sync demorar alguns minutos.** Cada salvo vira uma página do Notion, uma
+de cada vez, a cerca de meio segundo. Com o limite padrão de 30, são menos de dois
+minutos; sem limite, uma conta com mil salvos passa de dez. Com o state incremental,
+mesmo que interrompa, o trabalho não se perde.
 
 **Um salvo antigo com `Transcricao Status = Nao transcrever`.** É a decisão de projeto,
 não um erro. Ver `transcricao.md`.

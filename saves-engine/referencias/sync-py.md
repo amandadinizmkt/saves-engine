@@ -65,6 +65,14 @@ PAGE_SIZE = 50
 SLEEP_BETWEEN_PAGES = 1.0  # educado com o Instagram, e o que mantem a conta discreta
 STATE_EVERY = 25           # grava o progresso a cada 25 posts
 
+# Quantos salvos trazer na PRIMEIRA rodada. 0 = todos.
+# FICA AQUI, e nao no config.json, de proposito. O config e aberto num editor de
+# texto para colar cookies, e um Cmd+S pode gravar uma versao antiga do arquivo,
+# apagando o limite sem ninguem perceber. Aconteceu em 22/09/2026: vieram 2006
+# salvos em vez de 20. Decisao de comportamento mora no codigo; o config guarda
+# so o que muda por pessoa (cookies, token, ids das bases).
+LIMITE_PRIMEIRA_RODADA = 30
+
 
 def setup_logging():
     logger = logging.getLogger("saves-engine")
@@ -184,8 +192,9 @@ def validate_session(s):
     return username
 
 
-def fetch_saved_posts(s):
-    """Busca todos os salvos, de 50 em 50. O mais recente vem primeiro."""
+def fetch_saved_posts(s, limite=0):
+    """Busca os salvos, de 50 em 50. O mais recente vem primeiro.
+       limite=0 traz todos; qualquer outro numero para ao chegar nele."""
     posts = []
     url = "https://www.instagram.com/api/v1/feed/saved/posts/"
     next_max_id = None
@@ -215,6 +224,11 @@ def fetch_saved_posts(s):
             posts.append(it.get("media", it))
         page += 1
         log.info("Pagina %d: %d salvos (total %d)", page, len(items), len(posts))
+
+        if limite and len(posts) >= limite:
+            posts = posts[:limite]
+            log.info("Limite de %d salvos atingido. Parando por aqui.", limite)
+            break
 
         if not data.get("more_available"):
             break
@@ -418,7 +432,15 @@ def main():
     validate_session(s)
 
     log.info("Buscando posts salvos...")
-    posts = fetch_saved_posts(s)
+    # O limite vale so enquanto a base estiver vazia. Depois disso busca tudo:
+    # a deduplicacao pelo Media ID segura o que ja existe.
+    limite = 0
+    if not state.get("primeira_rodada_feita"):
+        limite = LIMITE_PRIMEIRA_RODADA
+        if limite:
+            log.info("Primeira rodada: pegando so os %d salvos mais recentes.", limite)
+
+    posts = fetch_saved_posts(s, limite=limite)
 
     notion = Client(auth=cfg["notion_token"])
     database_id = cfg["notion_database_id"]
@@ -471,6 +493,7 @@ def main():
             log.info("  ... %d gravados no Notion", new)
 
     state["synced_media_ids"] = sorted(known)
+    state["primeira_rodada_feita"] = True
     save_state(state)
 
     log.info("Sync completo: %d novos | %d ja existiam | %d total | %d erros",
