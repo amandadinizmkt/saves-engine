@@ -1,0 +1,7 @@
+# Nunca versionar acessos
+config.json
+state.json
+*.log
+.venv/
+__pycache__/
+.DS_Store
