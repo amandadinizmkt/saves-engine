@@ -94,14 +94,34 @@ Explique o porquê: "isso serve pra separar. Só esse pilar precisa citar ferram
 outros podem ser sobre a vida, o negócio, a cabeça, sem mencionar IA nenhuma."
 → `pilar_ferramenta` (pode ser "nenhum")
 
-**Pergunta 5: O token do Notion e os dois ids das bases.**
-Se ela ainda não criou, conduza: `notion.so/my-integrations` > New integration > copiar
-o token que começa com `ntn_`. Depois conectar a integração **nas duas bases**.
+**Pergunta 5: As duas bases do Notion já existem?**
+
+Se **sim**, peça os dois ids (o bloco de 32 caracteres na URL, antes do `?v=`).
+
+Se **não**, você mesma cria. Pergunte: **"você tem o conector do Notion ligado aqui no
+Claude?"** e siga `referencias/criar-bases-automatico.md`:
+
+- **Com conector:** crie as duas bases com as colunas certas, em segundos, e devolva os
+  ids pra ela. É o caminho padrão.
+- **Sem conector:** conduza ela a ligar (claude.ai > Configurações > Conectores >
+  Notion > Conectar e autorizar o workspace). Leva um minuto.
+- **Se não conseguir ligar de jeito nenhum** (workspace do trabalho sem permissão,
+  plano sem conector): aí sim conduza pelo manual de `referencias/bases-do-notion.md`.
+  Não deixe a pessoa parada: sempre existe uma saída.
+
+**Depois das bases criadas, de qualquer jeito, ela ainda precisa do token da
+integração**, que é uma coisa diferente do conector:
+
+- O **conector** é o Claude falando com o Notion nesta conversa.
+- A **integração** é o `sync.py` falando com o Notion sozinho, às 9h, quando você não
+  está aqui. Sem ela, o robô não escreve nada.
+
+Conduza: `notion.so/my-integrations` > New integration > copiar o token que começa com
+`ntn_` > conectar a integração **nas duas bases**.
 
 Diga em voz alta: **conectar só numa base é o erro mais comum do sistema inteiro.**
 
-Os ids vêm da URL de cada base, o bloco de 32 caracteres antes do `?v=`. Detalhes em
-`referencias/bases-do-notion.md`. → `notion_token`, `base_saves`, `base_ideas`
+→ `notion_token`, `base_saves`, `base_ideas`
 
 **Pergunta 6: Você quer transcrever os salvos que já estão lá, ou só o que entrar daqui
 pra frente?**
