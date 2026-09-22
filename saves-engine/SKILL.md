@@ -26,17 +26,21 @@ projetos da máquina.
    **não repita o valor**.
 3. **Detecte o sistema operacional uma vez** (pergunta 1) e gere o arquivo certo. Não
    pergunte de novo depois, e não gere as duas versões "por garantia".
-4. **As quatro proteções do `sync.py` não são negociáveis.** Retry de rede,
+4. **Confira antes de instalar, e instale o que faltar.** Nunca mande a pessoa "instalar
+   as dependências" por conta própria: rode a checagem, diga o que já existe, e rode os
+   comandos do sistema dela só para o que falta. Avise do download de 1,5 GB do modelo
+   **antes** de a tela ficar parada.
+5. **As quatro proteções do `sync.py` não são negociáveis.** Retry de rede,
    reordenamento com teto, lock de processo e state incremental a cada 25. São elas que
    separam "funcionou quando eu rodei" de "funciona sozinho por seis meses". Estão em
    `referencias/sync-py.md`.
-5. **Não prometa que funciona pra sempre.** A sessão do Instagram expira, e isso é
+6. **Não prometa que funciona pra sempre.** A sessão do Instagram expira, e isso é
    normal. Diga isso na entrega, junto com o que fazer quando acontecer.
-6. **Explique todo termo difícil em uma frase**, na hora que ele aparece. "Cookie" vira
+7. **Explique todo termo difícil em uma frase**, na hora que ele aparece. "Cookie" vira
    "o crachá que o seu navegador já usa pra provar que é você".
-7. **Nunca gere o código que chama o endpoint de coleções do Instagram.** Ele foi
+8. **Nunca gere o código que chama o endpoint de coleções do Instagram.** Ele foi
    descontinuado e só enche o log de erro 404. Ver `referencias/problemas-conhecidos.md`.
-8. **Não invente número.** Custo de API, velocidade de transcrição e faixas vêm de
+9. **Não invente número.** Custo de API, velocidade de transcrição e faixas vêm de
    `referencias/transcricao.md`, com a origem junto.
 
 ---
@@ -244,14 +248,87 @@ antes de seguir (quase sempre é o `Media ID` criado como Number em vez de Text)
 
 ## Etapa 5 — A transcrição
 
-Instale o que falta, conforme o caminho escolhido (`referencias/transcricao.md`), e
-rode com limite baixo primeiro:
+### 5.1 Conferir o que já existe na máquina
+
+**Antes de instalar qualquer coisa, veja o que já está lá.** Máquinas diferentes chegam
+em estados diferentes, e reinstalar o que existe só confunde.
+
+Rode a checagem do sistema dela:
+
+```bash
+# Mac
+for t in yt-dlp ffmpeg mlx_whisper; do which $t >/dev/null && echo "ok   $t" || echo "falta $t"; done
+```
+
+```
+REM Windows
+where yt-dlp & where ffmpeg
+```
+
+No Windows, confira também a biblioteca:
+```
+python -c "import faster_whisper; print('ok faster-whisper')"
+```
+
+Diga em voz clara o que encontrou: **"você já tem X e Y, falta Z"**. Se estiver tudo
+instalado, diga isso e pule direto para 5.3. Não rode instalação à toa.
+
+### 5.2 Instalar só o que falta
+
+Rode os comandos do sistema dela, **apenas para o que a checagem apontou como
+faltando**:
+
+**Mac (chip M):**
+```bash
+brew install yt-dlp ffmpeg     # só se faltarem
+pip3 install mlx-whisper       # no Mac é pip3, não pip
+```
+
+Se o `brew` não existir no Mac dela, instale primeiro:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**Windows:**
+```
+winget install ffmpeg
+pip install yt-dlp faster-whisper
+```
+
+Se o `winget` não existir (Windows 8 ou versões antigas do 10), mande baixar o ffmpeg
+em ffmpeg.org/download.html, descompactar, e adicionar a pasta `bin` ao PATH. Conduza
+esse passo com calma: é o ponto onde mais gente trava no Windows.
+
+**Windows, caminho da API** (se ela escolheu pago na pergunta 8):
+```
+pip install openai yt-dlp
+```
+
+### 5.3 Avisar sobre o download do modelo
+
+**Isto não é opcional, e é a diferença entre a pessoa esperar e a pessoa achar que
+travou.**
+
+Na primeira execução, o modelo de transcrição baixa sozinho: **cerca de 1,5 GB**, o
+que leva de **3 a 10 minutos** dependendo da internet. Enquanto baixa, a tela fica
+parada sem mostrar progresso.
+
+Diga isso **antes** de rodar, com estas palavras:
+
+> "A primeira vez baixa o modelo, que tem 1,5 GB. Vai parecer que travou, mas não
+> travou: é download. Da segunda vez em diante é instantâneo, e roda offline."
+
+Se a pessoa já tiver o modelo baixado de outro projeto, a primeira execução é
+instantânea. Nesse caso, diga que ela pulou a espera.
+
+### 5.4 Rodar com limite baixo
 
 ```bash
 .venv/bin/python3 transcribe.py --limit 3
 ```
 
-Avise que a primeira execução baixa o modelo (uns 1,5 GB) e demora mais.
+Três primeiro, não todos. Se algo estiver errado, o erro aparece em trinta segundos
+em vez de depois de meia hora.
 
 Quando terminar, peça pra ela abrir um reel transcrito no Notion e **comparar a legenda
 com a transcrição**. Quase sempre a legenda é "comenta EU QUERO" e o assunto inteiro
