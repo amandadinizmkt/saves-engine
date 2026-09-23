@@ -1,0 +1,39 @@
+name: Seguranca
+
+# Revisao de seguranca em todo PR.
+#
+# Aqui a receita esta escrita por extenso, e nao apontando para
+# DivosdaIA/infra: repositorio pessoal nao enxerga workflow de um
+# repositorio privado da organizacao.
+#
+# Se este repo for movido para a org, troque tudo isto por:
+#   jobs:
+#     revisar:
+#       uses: DivosdaIA/infra/.github/workflows/revisao-seguranca.yml@main
+#       secrets: inherit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  seguranca:
+    name: Procurar falhas de seguranca
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+
+      - uses: anthropics/claude-code-security-review@0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+        with:
+          claude-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude-model: claude-opus-5
+          comment-pr: true
+          exclude-directories: node_modules,.next,dist,build,backups,.vercel
+          claudecode-timeout: 20
