@@ -1,9 +1,13 @@
-name: Segurança
+name: Seguranca
 
-# Receita central em DivosdaIA/infra — ajuste lá, vale para todos.
+# Receita central em DivosdaIA/infra - ajuste la, vale para todos.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   revisar:
